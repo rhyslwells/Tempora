@@ -77,21 +77,21 @@ if page == "Welcome":
     """)
 
 elif page == "Upload":
-    from views import upload
+    from pages import upload
     upload.app()
 
 elif page == "Transform":
-    from views import transform
+    from pages import transform
     transform.app()
 
 elif page == "Explore":
-    from views import explore
+    from pages import explore
     explore.app()
 
 elif page == "Forecast":
-    from views import forecast
+    from pages import forecast
     forecast.app()
 
 elif page == "Future":
-    from views import future
+    from pages import future
     future.app()
