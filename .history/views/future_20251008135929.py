@@ -13,7 +13,7 @@ def app():
     st.markdown(
         """
 
-    ## **Welcome**
+    ## **About Section**
     - [ ] Provide a **“Quick Start Guide”** for first-time users  
     - [ ] Add a **data freshness check** (last updated timestamp)  
 
@@ -24,6 +24,7 @@ def app():
     - [ ] Allow **automatic frequency detection** and resampling (daily, monthly, etc.)  
     - [ ] Include a **data cleaning and missing value handling** section  
 
+
     ---
 
     ## **Explore**
@@ -33,9 +34,10 @@ def app():
     - [ ] Add **toggle to normalize** or scale data before analysis  
     - [ ] Add **outlier detection** and anomaly marking  
 
+
     ---
 
-    ## **Forecast |ARIMA Models Section**
+    ## **Forecast|ARIMA Models Section**
     - [ ] Implement **grid search** for best (p, d, q) parameters automatically  
     - [ ] Add **AIC/BIC comparison table** for multiple ARIMA fits  
     - [ ] Enable **residual diagnostics plots** using Plotly  
@@ -45,24 +47,28 @@ def app():
 
     ---
 
-    ## **Forecast | Prophet Tab**
+    ## **Forecast|Prophet Tab**
     - [ ] Allow **custom regressors** or holidays  
     - [ ] Enable **parameter tuning controls** (changepoint, seasonality scale)  
     - [ ] Add **interactive forecast plots** with confidence shading  
 
     ---
 
-    ## **Forecast | Future Model Expansions**
+    ## **Forecast|Future Model Expansions**
     - [ ] Integrate **SARIMA / SARIMAX** models  
     - [ ] Add **RNN / LSTM** architectures (user-defined layers and parameters)  
     - [ ] Implement **VAR / VARMAX** for multivariate forecasting  
 
     ---
 
-    ## **General | Learning / Documentation Features / Experience**
+    ## **Learning / Documentation Features**
     - [ ] Add ** explanations** for each model type and parameter  
     - [ ] Include **“Learn More” sections** beside outputs
     - [ ] Add **sample use cases** or datasets for quick demos 
+
+    ---
+
+    ## **User Experience**
     - [ ] Add **progress indicators** for model fitting and grid search  
     - [ ] Add **icons / color indicators** for model performance  
     - [ ] Enable **report generation** (PDF/Markdown summary of results)  
