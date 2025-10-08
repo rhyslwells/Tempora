@@ -148,33 +148,15 @@ def app():
     if not df_transformed.empty:
         # Reset index to make date a column for Plotly
         plot_df = df_transformed.reset_index()
-        date_column_name = plot_df.columns[0]
+        date_column_name = plot_df.columns[0]  # First column after reset is the date
         
-        # Ensure datetime and convert to proper format
-        plot_df[date_column_name] = pd.to_datetime(plot_df[date_column_name])
-        
-        # Convert to list/array to avoid any pandas index issues
-        dates = plot_df[date_column_name].tolist()
-        values = plot_df[selected_col].tolist()
-        
-        # Use plotly graph_objects for more control
-        import plotly.graph_objects as go
-        
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=dates,
-            y=values,
-            mode='lines+markers',
-            name=selected_col
-        ))
-        
-        fig.update_layout(
+        fig = px.line(
+            plot_df,
+            x=date_column_name,
+            y=selected_col,
             title=f"Time Series Preview: {selected_col}",
-            xaxis_title="Date",
-            yaxis_title=selected_col,
-            xaxis=dict(type='date')
+            markers=True
         )
-        
         st.plotly_chart(fig, use_container_width=True)
 
     # --- Download CSV ---

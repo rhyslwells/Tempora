@@ -38,15 +38,14 @@ def app():
         st.info("Select a column to proceed.")
         return
 
-    # Make a true copy of the selected column
+    # Create a copy of the selected column to avoid SettingWithCopyWarning
     df = raw_df[[selected_col]].copy()
 
-    # Convert to numeric safely and avoid SettingWithCopyWarning
+    # Convert to numeric safely
     df.loc[:, selected_col] = pd.to_numeric(df[selected_col], errors='coerce')
 
-    # Optional: drop rows where conversion failed (NaNs)
+    # Optional: drop rows that couldn't be converted
     df = df.dropna(subset=[selected_col])
-
 
     # --- Ensure numeric ---
     numeric_cols = df.select_dtypes(include=["float64", "int64"]).columns
@@ -127,54 +126,26 @@ def app():
     else:
         df_transformed = df_resampled.copy()
 
-    # FIX: Ensure proper dtypes for Arrow serialization
-    df_transformed.index = pd.to_datetime(df_transformed.index)
-    df_transformed[selected_col] = pd.to_numeric(df_transformed[selected_col], errors='coerce')
-    df_transformed = df_transformed.dropna()
     after_adf = adf_test(df_transformed[selected_col])
 
     # --- Show ADF Before / After ---
     with st.expander("Compare ADF Before vs After"):
         st.markdown(f"**Before:** {before_adf}  \n**After:** {after_adf}")
 
-
     # --- Preview ---
     st.subheader("🧾 Transformed Data Preview")
     st.dataframe(df_transformed.head(10))
 
     # --- Plotly chart ---
-    # --- Plotly chart ---
     st.subheader("📊 Time Series Preview")
     if not df_transformed.empty:
-        # Reset index to make date a column for Plotly
-        plot_df = df_transformed.reset_index()
-        date_column_name = plot_df.columns[0]
-        
-        # Ensure datetime and convert to proper format
-        plot_df[date_column_name] = pd.to_datetime(plot_df[date_column_name])
-        
-        # Convert to list/array to avoid any pandas index issues
-        dates = plot_df[date_column_name].tolist()
-        values = plot_df[selected_col].tolist()
-        
-        # Use plotly graph_objects for more control
-        import plotly.graph_objects as go
-        
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=dates,
-            y=values,
-            mode='lines+markers',
-            name=selected_col
-        ))
-        
-        fig.update_layout(
+        fig = px.line(
+            df_transformed,
+            x=df_transformed.index,
+            y=selected_col,
             title=f"Time Series Preview: {selected_col}",
-            xaxis_title="Date",
-            yaxis_title=selected_col,
-            xaxis=dict(type='date')
+            markers=True
         )
-        
         st.plotly_chart(fig, use_container_width=True)
 
     # --- Download CSV ---

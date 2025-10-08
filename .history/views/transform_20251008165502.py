@@ -143,7 +143,6 @@ def app():
     st.dataframe(df_transformed.head(10))
 
     # --- Plotly chart ---
-    # --- Plotly chart ---
     st.subheader("📊 Time Series Preview")
     if not df_transformed.empty:
         # Reset index to make date a column for Plotly
@@ -153,17 +152,20 @@ def app():
         # Ensure datetime and convert to proper format
         plot_df[date_column_name] = pd.to_datetime(plot_df[date_column_name])
         
-        # Convert to list/array to avoid any pandas index issues
-        dates = plot_df[date_column_name].tolist()
-        values = plot_df[selected_col].tolist()
+        # DEBUGGING: Check both columns
+        st.write(f"Debug - Date column: {date_column_name}, dtype: {plot_df[date_column_name].dtype}")
+        st.write(f"Debug - Value column: {selected_col}, dtype: {plot_df[selected_col].dtype}")
+        st.write("Debug - First few rows of plot_df:")
+        st.dataframe(plot_df.head())
+        st.write(f"Debug - plot_df columns: {plot_df.columns.tolist()}")
         
         # Use plotly graph_objects for more control
         import plotly.graph_objects as go
         
         fig = go.Figure()
         fig.add_trace(go.Scatter(
-            x=dates,
-            y=values,
+            x=plot_df[date_column_name],
+            y=plot_df[selected_col],
             mode='lines+markers',
             name=selected_col
         ))

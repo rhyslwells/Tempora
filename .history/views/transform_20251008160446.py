@@ -38,17 +38,7 @@ def app():
         st.info("Select a column to proceed.")
         return
 
-    # Make a true copy of the selected column
-    df = raw_df[[selected_col]].copy()
-
-    # Convert to numeric safely and avoid SettingWithCopyWarning
-    df.loc[:, selected_col] = pd.to_numeric(df[selected_col], errors='coerce')
-
-    # Optional: drop rows where conversion failed (NaNs)
-    df = df.dropna(subset=[selected_col])
-
-
-    # --- Ensure numeric ---
+    df = raw_df[[selected_col]]
     numeric_cols = df.select_dtypes(include=["float64", "int64"]).columns
     if selected_col not in numeric_cols:
         st.warning(f"Column '{selected_col}' is non-numeric and cannot have log/differencing applied.")
@@ -63,7 +53,7 @@ def app():
     )
     df = df.loc[min_date:max_date]
 
-    # --- Resampling & aggregation (optional) ---
+    # --- Resampling & aggregation (optional, keeps original daily for plotting) ---
     st.subheader("⏳ Frequency & Aggregation (Optional)")
     with st.expander("ℹ️ Info: Resampling / Aggregation"):
         st.markdown("""
@@ -76,28 +66,52 @@ def app():
         Aggregation method:
         - `mean`, `sum`, `min`, `max`, `first`, `last`
         """)
+
     freq = st.selectbox("Select resampling frequency:", ["None", "D - Daily", "B - Business Days", "W - Weekly", "M - Monthly"], index=0)
     if freq != "None":
         freq_code = freq.split(" - ")[0]
         agg_method = st.selectbox("Aggregation method:", ["mean", "sum", "min", "max", "first", "last"], index=0)
         df_resampled = df.resample(freq_code).agg(agg_method)
     else:
-        df_resampled = df.copy()
+        df_resampled = df.copy()  # keep daily values for preview
 
     # --- Interpolation ---
     st.subheader("🔧 Interpolation")
+    with st.expander("ℹ️ Info: Interpolation"):
+        st.markdown("""
+        Fill missing values after resampling:
+        - `none` → leave as NaN  
+        - `linear` → linear interpolation  
+        - `time` → linear interpolation using time index  
+        - `nearest` → fill using nearest observation
+        """)
     interp_method = st.selectbox("Interpolation method:", ["none", "linear", "time", "nearest"])
     if interp_method != "none":
         df_resampled = df_resampled.interpolate(method=interp_method)
 
     # --- Log Transform ---
     st.subheader("🔢 Log Transform")
+    with st.expander("ℹ️ Info: Log Transform"):
+        st.markdown("""
+        Applies log(x) to numeric columns. Useful for:
+        - Reducing skewness
+        - Stabilizing variance
+        - Comparing relative changes
+        """)
     apply_log = st.checkbox("Apply log transform (log(x))")
     if apply_log and selected_col in numeric_cols:
         df_resampled[selected_col] = np.log(df_resampled[selected_col].replace(0, np.nan))
 
     # --- Detrend / Difference ---
     st.subheader("📉 Detrending / Differencing")
+    with st.expander("ℹ️ Info: Detrending / Differencing"):
+        st.markdown("""
+        Removes trends from your series to make it stationary:
+        - `None` → keep original  
+        - `First Difference` → x_t - x_{t-1}  
+        - `Second Difference` → x_t - 2x_{t-1} + x_{t-2}  
+        - `Remove Linear Trend` → removes linear trend using regression
+        """)
     detrend_method = st.selectbox(
         "Detrending / Differencing:",
         ["None", "First Difference (df.diff())", "Second Difference (df.diff().diff())", "Remove Linear Trend"]
@@ -119,62 +133,31 @@ def app():
     elif detrend_method == "Second Difference (df.diff().diff())":
         df_transformed = df_resampled.diff().diff().dropna()
     elif detrend_method == "Remove Linear Trend":
-        df_transformed = pd.DataFrame(
-            detrend(df_resampled, type='linear'),
-            index=df_resampled.index,
-            columns=df_resampled.columns
-        )
+        df_transformed = df_resampled.apply(lambda x: detrend(x, type='linear'))
     else:
         df_transformed = df_resampled.copy()
 
-    # FIX: Ensure proper dtypes for Arrow serialization
-    df_transformed.index = pd.to_datetime(df_transformed.index)
-    df_transformed[selected_col] = pd.to_numeric(df_transformed[selected_col], errors='coerce')
-    df_transformed = df_transformed.dropna()
     after_adf = adf_test(df_transformed[selected_col])
 
     # --- Show ADF Before / After ---
     with st.expander("Compare ADF Before vs After"):
         st.markdown(f"**Before:** {before_adf}  \n**After:** {after_adf}")
 
-
     # --- Preview ---
     st.subheader("🧾 Transformed Data Preview")
     st.dataframe(df_transformed.head(10))
 
     # --- Plotly chart ---
-    # --- Plotly chart ---
     st.subheader("📊 Time Series Preview")
-    if not df_transformed.empty:
-        # Reset index to make date a column for Plotly
-        plot_df = df_transformed.reset_index()
-        date_column_name = plot_df.columns[0]
-        
-        # Ensure datetime and convert to proper format
-        plot_df[date_column_name] = pd.to_datetime(plot_df[date_column_name])
-        
-        # Convert to list/array to avoid any pandas index issues
-        dates = plot_df[date_column_name].tolist()
-        values = plot_df[selected_col].tolist()
-        
-        # Use plotly graph_objects for more control
-        import plotly.graph_objects as go
-        
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=dates,
-            y=values,
-            mode='lines+markers',
-            name=selected_col
-        ))
-        
-        fig.update_layout(
+    plot_df = df_transformed
+    if not plot_df.empty:
+        fig = px.line(
+            plot_df,
+            x=plot_df.index,
+            y=selected_col,
             title=f"Time Series Preview: {selected_col}",
-            xaxis_title="Date",
-            yaxis_title=selected_col,
-            xaxis=dict(type='date')
+            markers=True
         )
-        
         st.plotly_chart(fig, use_container_width=True)
 
     # --- Download CSV ---

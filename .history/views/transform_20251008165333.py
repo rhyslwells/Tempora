@@ -153,17 +153,13 @@ def app():
         # Ensure datetime and convert to proper format
         plot_df[date_column_name] = pd.to_datetime(plot_df[date_column_name])
         
-        # Convert to list/array to avoid any pandas index issues
-        dates = plot_df[date_column_name].tolist()
-        values = plot_df[selected_col].tolist()
-        
         # Use plotly graph_objects for more control
         import plotly.graph_objects as go
         
         fig = go.Figure()
         fig.add_trace(go.Scatter(
-            x=dates,
-            y=values,
+            x=plot_df[date_column_name],
+            y=plot_df["Open"],
             mode='lines+markers',
             name=selected_col
         ))
@@ -172,7 +168,7 @@ def app():
             title=f"Time Series Preview: {selected_col}",
             xaxis_title="Date",
             yaxis_title=selected_col,
-            xaxis=dict(type='date')
+            xaxis=dict(type='date')  # Explicitly set x-axis as date type
         )
         
         st.plotly_chart(fig, use_container_width=True)

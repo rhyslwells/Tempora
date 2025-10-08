@@ -112,7 +112,6 @@ def app():
         return f"ADF Statistic={result[0]:.3f}, p-value={result[1]:.3f}"
 
     before_adf = adf_test(df_resampled[selected_col])
-
     # --- Apply detrending / differencing ---
     if detrend_method == "First Difference (df.diff())":
         df_transformed = df_resampled.diff().dropna()
@@ -128,9 +127,22 @@ def app():
         df_transformed = df_resampled.copy()
 
     # FIX: Ensure proper dtypes for Arrow serialization
-    df_transformed.index = pd.to_datetime(df_transformed.index)
+    # Store the index name before conversion
+    index_name = df_transformed.index.name
+
+    # Convert index to datetime and reset the name
+    df_transformed.index = pd.DatetimeIndex(df_transformed.index)
+    df_transformed.index.name = index_name
+
+    # Ensure column is numeric
     df_transformed[selected_col] = pd.to_numeric(df_transformed[selected_col], errors='coerce')
+
+    # Drop NaN rows
     df_transformed = df_transformed.dropna()
+
+    # Re-apply the index name after dropna (sometimes it gets lost)
+    df_transformed.index.name = index_name
+
     after_adf = adf_test(df_transformed[selected_col])
 
     # --- Show ADF Before / After ---
@@ -148,33 +160,15 @@ def app():
     if not df_transformed.empty:
         # Reset index to make date a column for Plotly
         plot_df = df_transformed.reset_index()
-        date_column_name = plot_df.columns[0]
+        date_column_name = plot_df.columns[0]  # First column after reset is the date
         
-        # Ensure datetime and convert to proper format
-        plot_df[date_column_name] = pd.to_datetime(plot_df[date_column_name])
-        
-        # Convert to list/array to avoid any pandas index issues
-        dates = plot_df[date_column_name].tolist()
-        values = plot_df[selected_col].tolist()
-        
-        # Use plotly graph_objects for more control
-        import plotly.graph_objects as go
-        
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=dates,
-            y=values,
-            mode='lines+markers',
-            name=selected_col
-        ))
-        
-        fig.update_layout(
+        fig = px.line(
+            plot_df,
+            x=date_column_name,
+            y=selected_col,
             title=f"Time Series Preview: {selected_col}",
-            xaxis_title="Date",
-            yaxis_title=selected_col,
-            xaxis=dict(type='date')
+            markers=True
         )
-        
         st.plotly_chart(fig, use_container_width=True)
 
     # --- Download CSV ---

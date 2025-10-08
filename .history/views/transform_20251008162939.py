@@ -84,58 +84,56 @@ def app():
     else:
         df_resampled = df.copy()
 
-    # --- Interpolation ---
-    st.subheader("🔧 Interpolation")
-    interp_method = st.selectbox("Interpolation method:", ["none", "linear", "time", "nearest"])
-    if interp_method != "none":
-        df_resampled = df_resampled.interpolate(method=interp_method)
+    # # --- Interpolation ---
+    # st.subheader("🔧 Interpolation")
+    # interp_method = st.selectbox("Interpolation method:", ["none", "linear", "time", "nearest"])
+    # if interp_method != "none":
+    #     df_resampled = df_resampled.interpolate(method=interp_method)
 
-    # --- Log Transform ---
-    st.subheader("🔢 Log Transform")
-    apply_log = st.checkbox("Apply log transform (log(x))")
-    if apply_log and selected_col in numeric_cols:
-        df_resampled[selected_col] = np.log(df_resampled[selected_col].replace(0, np.nan))
+    # # --- Log Transform ---
+    # st.subheader("🔢 Log Transform")
+    # apply_log = st.checkbox("Apply log transform (log(x))")
+    # if apply_log and selected_col in numeric_cols:
+    #     df_resampled[selected_col] = np.log(df_resampled[selected_col].replace(0, np.nan))
 
-    # --- Detrend / Difference ---
-    st.subheader("📉 Detrending / Differencing")
-    detrend_method = st.selectbox(
-        "Detrending / Differencing:",
-        ["None", "First Difference (df.diff())", "Second Difference (df.diff().diff())", "Remove Linear Trend"]
-    )
+    # # --- Detrend / Difference ---
+    # st.subheader("📉 Detrending / Differencing")
+    # detrend_method = st.selectbox(
+    #     "Detrending / Differencing:",
+    #     ["None", "First Difference (df.diff())", "Second Difference (df.diff().diff())", "Remove Linear Trend"]
+    # )
 
-    # --- ADF Test Function ---
-    def adf_test(series):
-        series = series.dropna()
-        if len(series) < 10:
-            return "Too few data points for ADF."
-        result = adfuller(series)
-        return f"ADF Statistic={result[0]:.3f}, p-value={result[1]:.3f}"
+    # # --- ADF Test Function ---
+    # def adf_test(series):
+    #     series = series.dropna()
+    #     if len(series) < 10:
+    #         return "Too few data points for ADF."
+    #     result = adfuller(series)
+    #     return f"ADF Statistic={result[0]:.3f}, p-value={result[1]:.3f}"
 
-    before_adf = adf_test(df_resampled[selected_col])
+    # before_adf = adf_test(df_resampled[selected_col])
 
-    # --- Apply detrending / differencing ---
-    if detrend_method == "First Difference (df.diff())":
-        df_transformed = df_resampled.diff().dropna()
-    elif detrend_method == "Second Difference (df.diff().diff())":
-        df_transformed = df_resampled.diff().diff().dropna()
-    elif detrend_method == "Remove Linear Trend":
-        df_transformed = pd.DataFrame(
-            detrend(df_resampled, type='linear'),
-            index=df_resampled.index,
-            columns=df_resampled.columns
-        )
-    else:
-        df_transformed = df_resampled.copy()
+    # # --- Apply detrending / differencing ---
+    # if detrend_method == "First Difference (df.diff())":
+    #     df_transformed = df_resampled.diff().dropna()
+    # elif detrend_method == "Second Difference (df.diff().diff())":
+    #     df_transformed = df_resampled.diff().diff().dropna()
+    # elif detrend_method == "Remove Linear Trend":
+    #     df_transformed = pd.DataFrame(
+    #         detrend(df_resampled, type='linear'),
+    #         index=df_resampled.index,
+    #         columns=df_resampled.columns
+    #     )
+    # else:
+    #     df_transformed = df_resampled.copy()
 
-    # FIX: Ensure proper dtypes for Arrow serialization
-    df_transformed.index = pd.to_datetime(df_transformed.index)
-    df_transformed[selected_col] = pd.to_numeric(df_transformed[selected_col], errors='coerce')
-    df_transformed = df_transformed.dropna()
-    after_adf = adf_test(df_transformed[selected_col])
+    # after_adf = adf_test(df_transformed[selected_col])
 
-    # --- Show ADF Before / After ---
-    with st.expander("Compare ADF Before vs After"):
-        st.markdown(f"**Before:** {before_adf}  \n**After:** {after_adf}")
+    # # --- Show ADF Before / After ---
+    # with st.expander("Compare ADF Before vs After"):
+    #     st.markdown(f"**Before:** {before_adf}  \n**After:** {after_adf}")
+
+    df_transformed = df_resampled.copy()
 
 
     # --- Preview ---
@@ -143,38 +141,15 @@ def app():
     st.dataframe(df_transformed.head(10))
 
     # --- Plotly chart ---
-    # --- Plotly chart ---
     st.subheader("📊 Time Series Preview")
     if not df_transformed.empty:
-        # Reset index to make date a column for Plotly
-        plot_df = df_transformed.reset_index()
-        date_column_name = plot_df.columns[0]
-        
-        # Ensure datetime and convert to proper format
-        plot_df[date_column_name] = pd.to_datetime(plot_df[date_column_name])
-        
-        # Convert to list/array to avoid any pandas index issues
-        dates = plot_df[date_column_name].tolist()
-        values = plot_df[selected_col].tolist()
-        
-        # Use plotly graph_objects for more control
-        import plotly.graph_objects as go
-        
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=dates,
-            y=values,
-            mode='lines+markers',
-            name=selected_col
-        ))
-        
-        fig.update_layout(
+        fig = px.line(
+            df_transformed,
+            x=df_transformed.index,
+            y=selected_col,
             title=f"Time Series Preview: {selected_col}",
-            xaxis_title="Date",
-            yaxis_title=selected_col,
-            xaxis=dict(type='date')
+            markers=True
         )
-        
         st.plotly_chart(fig, use_container_width=True)
 
     # --- Download CSV ---
