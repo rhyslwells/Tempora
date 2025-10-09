@@ -110,24 +110,29 @@ def show_moving_average(df: pd.DataFrame):
 
     window = st.slider("Select smoothing window size", 3, 60, 7)
 
-    # Ensure datetime handling like plot_time_series
+    # --- Ensure Date column is datetime and sorted ---
     df_copy = df.copy()
     df_copy["Date"] = pd.to_datetime(df_copy["Date"], errors='coerce')
     df_copy = df_copy.dropna(subset=["Date"])
     df_copy = df_copy.sort_values(by="Date")
 
+    # --- Compute moving average ---
     df_copy["Moving Average"] = df_copy[target_col].rolling(window=window).mean()
 
-    # Plot
-    plot_df = df_copy.reset_index()
-    date_column_name = plot_df.columns[0]
-    plot_df[date_column_name] = pd.to_datetime(plot_df[date_column_name], errors='coerce')
-
+    # --- Plot using robust Date handling ---
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=plot_df[date_column_name], y=plot_df[target_col],
-                             mode="lines", name="Original"))
-    fig.add_trace(go.Scatter(x=plot_df[date_column_name], y=plot_df["Moving Average"],
-                             mode="lines", name=f"{window}-Period MA"))
+    fig.add_trace(go.Scatter(
+        x=df_copy["Date"],
+        y=df_copy[target_col],
+        mode="lines",
+        name="Original"
+    ))
+    fig.add_trace(go.Scatter(
+        x=df_copy["Date"],
+        y=df_copy["Moving Average"],
+        mode="lines",
+        name=f"{window}-Period MA"
+    ))
     fig.update_layout(
         title=f"Moving Average - {target_col}",
         xaxis_title="Date",
@@ -135,6 +140,7 @@ def show_moving_average(df: pd.DataFrame):
         xaxis=dict(type="date")
     )
     st.plotly_chart(fig, use_container_width=True)
+
 
 
 def show_decomposition(df: pd.DataFrame):

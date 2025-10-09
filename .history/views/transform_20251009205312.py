@@ -26,13 +26,11 @@ def app():
     # --- Date setup
     st.subheader("🗓️ Date Configuration")
     date_col = st.selectbox("Select the date column:", raw_df.columns)
-    st.session_state["date_col"] = date_col
     df = prepare_dataframe(raw_df, date_col).copy()
 
     # --- Column selection
     st.subheader("📈 Column to Transform")
     selected_col = st.selectbox("Select column:", df.columns)
-    st.session_state["selected_col"] = selected_col
     df = select_numeric_column(df, selected_col).copy()
 
     # --- Date range restriction
@@ -40,7 +38,7 @@ def app():
 
     # --- Resampling / Aggregation
     st.subheader("⏳ Frequency & Aggregation")
-    freq = st.selectbox("Frequency:", ["None", "D - Daily", "B - Business Days", "W - Weekly", "M - Monthly"]) # Choose start of the month,week
+    freq = st.selectbox("Frequency:", ["None", "D - Daily", "B - Business Days", "W - Weekly", "M - Monthly"])
     agg_method = st.selectbox("Aggregation method:", ["mean", "sum", "min", "max", "first", "last"])
     df = resample_dataframe(df, freq, agg_method).copy()
 

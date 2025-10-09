@@ -40,7 +40,7 @@ def app():
 
     # --- Resampling / Aggregation
     st.subheader("⏳ Frequency & Aggregation")
-    freq = st.selectbox("Frequency:", ["None", "D - Daily", "B - Business Days", "W - Weekly", "M - Monthly"]) # Choose start of the month,week
+    freq = st.selectbox("Frequency:", ["None", "D - Daily", "B - Business Days", "W - Weekly", "M - Monthly"])
     agg_method = st.selectbox("Aggregation method:", ["mean", "sum", "min", "max", "first", "last"])
     df = resample_dataframe(df, freq, agg_method).copy()
 

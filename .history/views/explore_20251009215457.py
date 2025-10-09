@@ -1,6 +1,7 @@
 # explore.py
 import streamlit as st
 import pandas as pd
+import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from statsmodels.tsa.seasonal import seasonal_decompose
@@ -9,28 +10,23 @@ from statsmodels.tsa.seasonal import seasonal_decompose
 # Helper Plot Functions
 # -----------------------
 
-def plot_time_series(df, col, date_col="Date"):
+def plot_time_series(df: pd.DataFrame, col: str):
     """Plot a single-column time series with Plotly (robust version)."""
     if df.empty:
         st.info("No data available for plotting.")
         return
 
-    df_copy = df.copy()
-    df_copy[date_col] = pd.to_datetime(df_copy[date_col], errors='coerce')
-    df_copy = df_copy.dropna(subset=[date_col])
-    df_copy = df_copy.sort_values(by=date_col)
-
-    dates = df_copy[date_col].tolist()
-    values = df_copy[col].tolist()
+    plot_df = df.reset_index()
+    date_column_name = plot_df.columns[0]
+    plot_df[date_column_name] = pd.to_datetime(plot_df[date_column_name], errors='coerce')
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(
-        x=dates,
-        y=values,
+        x=plot_df[date_column_name],
+        y=plot_df[col],
         mode='lines+markers',
         name=col
     ))
-
     fig.update_layout(
         title=f"Time Series Preview: {col}",
         xaxis_title="Date",
@@ -40,22 +36,16 @@ def plot_time_series(df, col, date_col="Date"):
     st.plotly_chart(fig, use_container_width=True)
 
 
-def make_decomposition_plot(df, result, target_col):
-    """Create decomposition Plotly figure using robust index handling."""
-    plot_df = df.reset_index()
-    date_column_name = plot_df.columns[0]
-    plot_df[date_column_name] = pd.to_datetime(plot_df[date_column_name], errors='coerce')
-
+def make_decomposition_plot(index, result, target_col):
+    """Helper to create decomposition Plotly figure."""
     fig = make_subplots(rows=4, cols=1, shared_xaxes=True,
                         subplot_titles=[f"Observed ({target_col})", "Trend", "Seasonal", "Residual"])
-    fig.add_trace(go.Scatter(x=plot_df[date_column_name], y=result.observed, name="Observed"), row=1, col=1)
-    fig.add_trace(go.Scatter(x=plot_df[date_column_name], y=result.trend, name="Trend"), row=2, col=1)
-    fig.add_trace(go.Scatter(x=plot_df[date_column_name], y=result.seasonal, name="Seasonal"), row=3, col=1)
-    fig.add_trace(go.Scatter(x=plot_df[date_column_name], y=result.resid, name="Residual"), row=4, col=1)
-
-    fig.update_layout(height=900, title_text=f"Seasonal Decomposition of {target_col}",
-                      xaxis=dict(type='date'))
-    st.plotly_chart(fig, use_container_width=True)
+    fig.add_trace(go.Scatter(x=index, y=result.observed, name="Observed"), row=1, col=1)
+    fig.add_trace(go.Scatter(x=index, y=result.trend, name="Trend"), row=2, col=1)
+    fig.add_trace(go.Scatter(x=index, y=result.seasonal, name="Seasonal"), row=3, col=1)
+    fig.add_trace(go.Scatter(x=index, y=result.resid, name="Residual"), row=4, col=1)
+    fig.update_layout(height=900, title_text=f"Seasonal Decomposition of {target_col}")
+    return fig
 
 
 # -----------------------
@@ -96,37 +86,34 @@ def show_time_series_view(df: pd.DataFrame):
     target_col = numeric_cols[0]  # Only one numeric column assumed
     st.session_state["selected_col"] = target_col
 
-    plot_time_series(df, target_col)
+    df_copy = df.copy()
+    df_copy.set_index(date_col, inplace=True)
+    plot_time_series(df_copy, target_col)
+
     return date_col, target_col
 
 
 def show_moving_average(df: pd.DataFrame):
     st.subheader("📊 Moving Average Smoothing")
 
+    date_col = "Date"
     target_col = st.session_state.get("selected_col", None)
     if target_col is None:
         st.info("No numeric column stored for moving average.")
         return
 
-    window = st.slider("Select smoothing window size", 3, 60, 7)
-
-    # Ensure datetime handling like plot_time_series
     df_copy = df.copy()
-    df_copy["Date"] = pd.to_datetime(df_copy["Date"], errors='coerce')
-    df_copy = df_copy.dropna(subset=["Date"])
-    df_copy = df_copy.sort_values(by="Date")
+    df_copy.set_index(date_col, inplace=True)
 
+    window = st.slider("Select smoothing window size", 3, 60, 7)
     df_copy["Moving Average"] = df_copy[target_col].rolling(window=window).mean()
 
     # Plot
     plot_df = df_copy.reset_index()
-    date_column_name = plot_df.columns[0]
-    plot_df[date_column_name] = pd.to_datetime(plot_df[date_column_name], errors='coerce')
-
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=plot_df[date_column_name], y=plot_df[target_col],
+    fig.add_trace(go.Scatter(x=plot_df[date_col], y=plot_df[target_col],
                              mode="lines", name="Original"))
-    fig.add_trace(go.Scatter(x=plot_df[date_column_name], y=plot_df["Moving Average"],
+    fig.add_trace(go.Scatter(x=plot_df[date_col], y=plot_df["Moving Average"],
                              mode="lines", name=f"{window}-Period MA"))
     fig.update_layout(
         title=f"Moving Average - {target_col}",
@@ -140,22 +127,22 @@ def show_moving_average(df: pd.DataFrame):
 def show_decomposition(df: pd.DataFrame):
     st.subheader("🧩 Time Series Decomposition")
 
+    date_col = "Date"
     target_col = st.session_state.get("selected_col", None)
     if target_col is None:
         st.info("No numeric column stored for decomposition.")
         return
 
+    df_copy = df.copy()
+    df_copy.set_index(date_col, inplace=True)
+
     model_type = st.radio("Select model type", ["additive", "multiplicative"], horizontal=True)
     period = st.number_input("Seasonal period", min_value=2, value=12)
 
-    df_copy = df.copy()
-    df_copy["Date"] = pd.to_datetime(df_copy["Date"], errors='coerce')
-    df_copy = df_copy.dropna(subset=["Date"])
-    df_copy = df_copy.sort_values(by="Date")
-
     try:
-        result = seasonal_decompose(df_copy[target_col], model=model_type, period=period)
-        make_decomposition_plot(df_copy, result, target_col)
+        result = seasonal_decompose(df_copy[target_col].dropna(), model=model_type, period=period)
+        fig = make_decomposition_plot(df_copy.index, result, target_col)
+        st.plotly_chart(fig, use_container_width=True)
     except Exception as e:
         st.error(f"Decomposition failed: {e}")
 
@@ -168,27 +155,26 @@ def app():
     st.title("Data Exploration")
 
     df = st.session_state.get("df_transform", None)
-    date_col = st.session_state.get("date_col", None)
-    if df is None or date_col is None:
-        st.warning("⚠️ No dataset or date column found. Please upload a file first.")
+    if df is None:
+        st.warning("⚠️ No dataset found. Please upload a file first.")
         return
 
-    # Prepare DataFrame for all plots
+    date_col = st.session_state.get("date_col", None)
+    if date_col is None:
+        st.warning("⚠️ No date column stored. Please select a date column first.")
+        return
+
+    # Ensure datetime
     df_copy = df.copy()
-    if date_col not in df_copy.columns:
-        df_copy = df_copy.reset_index()
+    df_copy.reset_index(inplace=True)
     df_copy["Date"] = pd.to_datetime(df_copy[date_col], errors="coerce")
-    df_copy = df_copy.dropna(subset=["Date"])
-    df_copy = df_copy.sort_values(by="Date")
 
     # Tabs
     tab1, tab2, tab3 = st.tabs(["Plot", "Statistics", "Decomposition"])
 
     with tab1:
-        df_copy_1 = df_copy.copy()
-        show_time_series_view(df_copy_1)
-        df_copy_2 = df_copy.copy()
-        show_moving_average(df_copy_2)
+        show_time_series_view(df_copy)
+        show_moving_average(df_copy)
 
     with tab2:
         show_overview(df_copy)

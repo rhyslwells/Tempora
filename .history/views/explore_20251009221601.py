@@ -185,10 +185,8 @@ def app():
     tab1, tab2, tab3 = st.tabs(["Plot", "Statistics", "Decomposition"])
 
     with tab1:
-        df_copy_1 = df_copy.copy()
-        show_time_series_view(df_copy_1)
-        df_copy_2 = df_copy.copy()
-        show_moving_average(df_copy_2)
+        show_time_series_view(df_copy)
+        show_moving_average(df_copy)
 
     with tab2:
         show_overview(df_copy)
