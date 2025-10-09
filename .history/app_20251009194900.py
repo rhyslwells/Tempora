@@ -28,7 +28,7 @@ if page == "Welcome":
     st.markdown("""
     ### Overview
 
-    This application provides an interactive environment for **transforming, exploring, and forecasting time series data**.
+    This application provides an interactive environment for **transforming,exploring, and forecasting time series data** directly in your browser.
 
     To learn more about the underlying methods, visit the [Data Archive](https://rhyslwells.github.io/Data-Archive) for articles related to time series.
                 
@@ -38,11 +38,11 @@ if page == "Welcome":
 
     1. Navigate through sidebar.  
     2. Upload your time series data in `.csv` or `.xlsx` format.  
-    3. In the **Transform** section, select a **data frequency**, **date range**, and **interpolate** missing values.
+    3. In the **Transform** section, select a **data frequency** and **interpolate** missing values.
     4. In the **Explore** section, inspect trends, seasonality, and noise components.  
     5. In the **Forecast** section, select a model type and configure or grid-search parameters.  
     6. Choose your **optimisation metric** (e.g., AIC, RMSE, MAE) to find the best-performing configuration.  
-    7. View and download forecast results, model summaries, metrics, and parameter results.
+    7. View and download model summaries, metrics, and parameter results.
 
     ---
 

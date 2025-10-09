@@ -28,7 +28,7 @@ if page == "Welcome":
     st.markdown("""
     ### Overview
 
-    This application provides an interactive environment for **transforming, exploring, and forecasting time series data**.
+    This application provides an interactive environment for **transforming,exploring, and forecasting time series data** directly in your browser.
 
     To learn more about the underlying methods, visit the [Data Archive](https://rhyslwells.github.io/Data-Archive) for articles related to time series.
                 
@@ -38,21 +38,19 @@ if page == "Welcome":
 
     1. Navigate through sidebar.  
     2. Upload your time series data in `.csv` or `.xlsx` format.  
-    3. In the **Transform** section, select a **data frequency**, **date range**, and **interpolate** missing values.
+    3. In the **Transform** section, select a **data frequency** and **interpolate** missing values.
     4. In the **Explore** section, inspect trends, seasonality, and noise components.  
     5. In the **Forecast** section, select a model type and configure or grid-search parameters.  
     6. Choose your **optimisation metric** (e.g., AIC, RMSE, MAE) to find the best-performing configuration.  
-    7. View and download forecast results, model summaries, metrics, and parameter results.
+    7. View and download model summaries, metrics, and parameter results.
 
     ---
 
     ### Use Cases
 
-    - Quick exploration of time series data.
-    - Identifying trends, seasonality, and noise components.
-    - Forecasting time series data.
+    - Rapid prototyping of forecasting models.  
     - Educational demonstration of statistical time series techniques.  
-    - Exploratory analysis.  
+    - Exploratory analysis for operational, financial, or environmental datasets.  
     - Comparison of different forecasting methods under consistent evaluation metrics.
 
     ---
@@ -60,10 +58,10 @@ if page == "Welcome":
     ### Important Notes
 
     - Uploaded datasets and model outputs exist **only for the current session** and will be lost when you refresh or close the app.  
-    - Ensure your data includes a **date column** (daily,weekly,monthly) and a **target variable** for best results.  
+    - Ensure your data includes a **datetime column** and a **target variable** for best results.  
     - Large datasets or extensive grid searches may increase computation time.  
 
-    For source code and examples, see the [time-series-analysis repository](https://github.com/rhyslwells/TimeSeries-App).
+    For source code and examples, see the [time-series-analysis repository](https://github.com/rhyslwells/time-series-analysis).
     """)
 
 elif page == "Upload":

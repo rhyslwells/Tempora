@@ -42,7 +42,7 @@ if page == "Welcome":
     4. In the **Explore** section, inspect trends, seasonality, and noise components.  
     5. In the **Forecast** section, select a model type and configure or grid-search parameters.  
     6. Choose your **optimisation metric** (e.g., AIC, RMSE, MAE) to find the best-performing configuration.  
-    7. View and download forecast results, model summaries, metrics, and parameter results.
+    7. View and download model summaries, metrics, and parameter results.
 
     ---
 
