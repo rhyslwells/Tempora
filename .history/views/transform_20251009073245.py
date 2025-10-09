@@ -12,7 +12,6 @@ from utils.transform_utils import (
     select_numeric_column,
 )
 
-
 def app():
     st.title("🔄 Data Transformation")
     st.write("Prepare your dataset for time series analysis or forecasting.")
