@@ -1,9 +1,3 @@
-# whydo we have test prediction? we only realy have the test, to get the forecast accuracy metrics 
-# we dont need to plot the test prediction.
-
-# forecast_sarima 
-# TypeError: forecast_sarima() missing 1 required positional argument: 'seasonal_order'
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -46,16 +40,18 @@ def calculate_metrics(actual, predicted):
     return mae, rmse, mape, r2
 
 
-def plot_forecast(train, test, test_forecast_values, future_forecast, model_name, col_name):
-    """Create an interactive forecast plot showing train, test, test predictions, and future forecast."""
-    fig = go.Figure()
-    
-    # Training data
+def plot_forecast(train, test, forecast, model_name, col_name):
+    """Create an interactive forecast plot."""
     train_reset = train.reset_index()
+    test_reset = test.reset_index() if test is not None and len(test) > 0 else None
+    
     date_col = train_reset.columns[0]
     train_dates = pd.to_datetime(train_reset[date_col]).tolist()
     train_values = train_reset[col_name].tolist()
     
+    fig = go.Figure()
+    
+    # Training data
     fig.add_trace(go.Scatter(
         x=train_dates,
         y=train_values,
@@ -64,42 +60,28 @@ def plot_forecast(train, test, test_forecast_values, future_forecast, model_name
         line=dict(color='#1f77b4', width=2)
     ))
     
-    # Test data (actual) if available
-    if test is not None and len(test) > 0:
-        test_reset = test.reset_index()
+    # Test data (if available)
+    if test_reset is not None:
         test_dates = pd.to_datetime(test_reset[date_col]).tolist()
         test_values = test_reset[col_name].tolist()
-        
         fig.add_trace(go.Scatter(
             x=test_dates,
             y=test_values,
             mode='lines',
             name='Actual (Test)',
-            line=dict(color='#2ca02c', width=2)
+            line=dict(color='gray', width=2, dash='dash')
         ))
-        
-        # Test predictions if available
-        if test_forecast_values is not None:
-            fig.add_trace(go.Scatter(
-                x=test_dates,
-                y=test_forecast_values,
-                mode='lines',
-                name='Test Predictions',
-                line=dict(color='#ff7f0e', width=2, dash='dash')
-            ))
     
-    # Future forecast
-    if future_forecast is not None:
-        future_dates = future_forecast.index.tolist()
-        future_values = future_forecast.values.tolist()
-        
-        fig.add_trace(go.Scatter(
-            x=future_dates,
-            y=future_values,
-            mode='lines',
-            name=f'Future Forecast',
-            line=dict(color='#d62728', width=2.5)
-        ))
+    # Forecast
+    forecast_dates = forecast.index.tolist()
+    forecast_values = forecast.values.tolist()
+    fig.add_trace(go.Scatter(
+        x=forecast_dates,
+        y=forecast_values,
+        mode='lines',
+        name=f'{model_name} Forecast',
+        line=dict(color='#ff7f0e', width=2)
+    ))
     
     fig.update_layout(
         title=f"{model_name} Forecast",
@@ -150,17 +132,18 @@ def show_metrics(metrics, test_available=False):
 # Exponential Smoothing
 # ========================================
 
-def forecast_exponential_smoothing(train, test, forecast_periods, col_name, full_data, method="Triple"):
+def forecast_exponential_smoothing(train, test, forecast_periods, col_name, method="Triple"):
     """Perform exponential smoothing forecast."""
     try:
-        # Fit model on training data only
         if method == "Single":
             model = SimpleExpSmoothing(train[col_name]).fit()
         elif method == "Double":
             model = Holt(train[col_name]).fit()
         else:  # Triple
+            # Determine seasonal periods automatically
             seasonal_period = st.session_state.get("seasonal_period", 12)
             
+            # Try multiplicative first, fallback to additive if it fails
             try:
                 model = ExponentialSmoothing(
                     train[col_name],
@@ -176,54 +159,26 @@ def forecast_exponential_smoothing(train, test, forecast_periods, col_name, full
                     seasonal_periods=seasonal_period
                 ).fit()
         
-        # Calculate metrics on test set if available
-        test_forecast_values = None
+        # Generate forecast
+        forecast = model.forecast(steps=forecast_periods)
+        forecast = pd.Series(forecast, index=pd.date_range(
+            start=train.index[-1] + pd.Timedelta(days=1),
+            periods=forecast_periods,
+            freq=train.index.freq or 'D'
+        ))
+        
+        # Calculate metrics if test data available
         if test is not None and len(test) > 0:
-            test_forecast_values = model.forecast(steps=len(test))
-            metrics = calculate_metrics(test[col_name].values, test_forecast_values)
+            test_forecast = model.forecast(steps=len(test))
+            metrics = calculate_metrics(test[col_name].values, test_forecast)
         else:
             metrics = (None, None, None, None)
         
-        # Now refit on FULL data for future forecast
-        if test is not None and len(test) > 0:
-            if method == "Single":
-                model_full = SimpleExpSmoothing(full_data[col_name]).fit()
-            elif method == "Double":
-                model_full = Holt(full_data[col_name]).fit()
-            else:
-                try:
-                    model_full = ExponentialSmoothing(
-                        full_data[col_name],
-                        trend='add',
-                        seasonal='mul',
-                        seasonal_periods=seasonal_period
-                    ).fit()
-                except:
-                    model_full = ExponentialSmoothing(
-                        full_data[col_name],
-                        trend='add',
-                        seasonal='add',
-                        seasonal_periods=seasonal_period
-                    ).fit()
-        else:
-            model_full = model
-        
-        # Generate future forecast starting after the last data point
-        last_date = full_data.index[-1]
-        freq = full_data.index.freq or pd.infer_freq(full_data.index) or 'D'
-        
-        future_forecast = model_full.forecast(steps=forecast_periods)
-        future_forecast = pd.Series(future_forecast, index=pd.date_range(
-            start=last_date + pd.Timedelta(days=1),
-            periods=forecast_periods,
-            freq=freq
-        ))
-        
-        return future_forecast, test_forecast_values, metrics, model
+        return forecast, metrics, model
     
     except Exception as e:
         st.error(f"Exponential Smoothing failed: {str(e)}")
-        return None, None, (None, None, None, None), None
+        return None, (None, None, None, None), None
 
 
 def show_exponential_smoothing():
@@ -276,42 +231,31 @@ def show_exponential_smoothing():
 # ARIMA
 # ========================================
 
-def forecast_arima(train, test, forecast_periods, col_name, full_data, order):
+def forecast_arima(train, test, forecast_periods, col_name, order):
     """Perform ARIMA forecast."""
     try:
-        # Fit model on training data
         model = ARIMA(train[col_name], order=order).fit()
         
-        # Calculate metrics on test set if available
-        test_forecast_values = None
+        # Generate forecast
+        forecast = model.forecast(steps=forecast_periods)
+        forecast = pd.Series(forecast, index=pd.date_range(
+            start=train.index[-1] + pd.Timedelta(days=1),
+            periods=forecast_periods,
+            freq=train.index.freq or 'D'
+        ))
+        
+        # Calculate metrics if test data available
         if test is not None and len(test) > 0:
-            test_forecast_values = model.forecast(steps=len(test))
-            metrics = calculate_metrics(test[col_name].values, test_forecast_values)
+            test_forecast = model.forecast(steps=len(test))
+            metrics = calculate_metrics(test[col_name].values, test_forecast)
         else:
             metrics = (None, None, None, None)
         
-        # Refit on full data for future forecast
-        if test is not None and len(test) > 0:
-            model_full = ARIMA(full_data[col_name], order=order).fit()
-        else:
-            model_full = model
-        
-        # Generate future forecast
-        last_date = full_data.index[-1]
-        freq = full_data.index.freq or pd.infer_freq(full_data.index) or 'D'
-        
-        future_forecast = model_full.forecast(steps=forecast_periods)
-        future_forecast = pd.Series(future_forecast, index=pd.date_range(
-            start=last_date + pd.Timedelta(days=1),
-            periods=forecast_periods,
-            freq=freq
-        ))
-        
-        return future_forecast, test_forecast_values, metrics, model_full
+        return forecast, metrics, model
     
     except Exception as e:
         st.error(f"ARIMA failed: {str(e)}")
-        return None, None, (None, None, None, None), None
+        return None, (None, None, None, None), None
 
 
 def show_arima():
@@ -381,50 +325,35 @@ def show_arima():
 # SARIMA
 # ========================================
 
-def forecast_sarima(train, test, forecast_periods, col_name, full_data, order, seasonal_order):
+def forecast_sarima(train, test, forecast_periods, col_name, order, seasonal_order):
     """Perform SARIMA forecast."""
     try:
-        # Fit model on training data
         model = SARIMAX(
             train[col_name],
             order=order,
             seasonal_order=seasonal_order
         ).fit(disp=False)
         
-        # Calculate metrics on test set if available
-        test_forecast_values = None
+        # Generate forecast
+        forecast = model.forecast(steps=forecast_periods)
+        forecast = pd.Series(forecast, index=pd.date_range(
+            start=train.index[-1] + pd.Timedelta(days=1),
+            periods=forecast_periods,
+            freq=train.index.freq or 'D'
+        ))
+        
+        # Calculate metrics if test data available
         if test is not None and len(test) > 0:
-            test_forecast_values = model.forecast(steps=len(test))
-            metrics = calculate_metrics(test[col_name].values, test_forecast_values)
+            test_forecast = model.forecast(steps=len(test))
+            metrics = calculate_metrics(test[col_name].values, test_forecast)
         else:
             metrics = (None, None, None, None)
         
-        # Refit on full data for future forecast
-        if test is not None and len(test) > 0:
-            model_full = SARIMAX(
-                full_data[col_name],
-                order=order,
-                seasonal_order=seasonal_order
-            ).fit(disp=False)
-        else:
-            model_full = model
-        
-        # Generate future forecast
-        last_date = full_data.index[-1]
-        freq = full_data.index.freq or pd.infer_freq(full_data.index) or 'D'
-        
-        future_forecast = model_full.forecast(steps=forecast_periods)
-        future_forecast = pd.Series(future_forecast, index=pd.date_range(
-            start=last_date + pd.Timedelta(days=1),
-            periods=forecast_periods,
-            freq=freq
-        ))
-        
-        return future_forecast, test_forecast_values, metrics, model_full
+        return forecast, metrics, model
     
     except Exception as e:
         st.error(f"SARIMA failed: {str(e)}")
-        return None, None, (None, None, None, None), None
+        return None, (None, None, None, None), None
 
 
 def show_sarima():
@@ -485,15 +414,16 @@ def show_sarima():
 # Prophet
 # ========================================
 
-def forecast_prophet(train, test, forecast_periods, col_name, full_data):
+def forecast_prophet(train, test, forecast_periods, col_name):
     """Perform Prophet forecast."""
     try:
         from prophet import Prophet
         
-        # Fit model on training data
+        # Prepare data for Prophet
         train_prophet = train.reset_index()
         train_prophet.columns = ['ds', 'y']
         
+        # Initialize and fit model
         model = Prophet(
             daily_seasonality=False,
             weekly_seasonality=True,
@@ -501,53 +431,37 @@ def forecast_prophet(train, test, forecast_periods, col_name, full_data):
         )
         model.fit(train_prophet)
         
-        # Calculate metrics on test set if available
-        test_forecast_values = None
-        if test is not None and len(test) > 0:
-            test_future = model.make_future_dataframe(periods=len(test), freq='D')
-            test_forecast_df = model.predict(test_future)
-            test_forecast_values = test_forecast_df['yhat'].values[-len(test):]
-            metrics = calculate_metrics(test[col_name].values, test_forecast_values)
-        else:
-            metrics = (None, None, None, None)
+        # Create future dataframe
+        future = model.make_future_dataframe(periods=forecast_periods, freq='D')
+        forecast_df = model.predict(future)
         
-        # Refit on full data for future forecast
-        if test is not None and len(test) > 0:
-            full_prophet = full_data.reset_index()
-            full_prophet.columns = ['ds', 'y']
-            model_full = Prophet(
-                daily_seasonality=False,
-                weekly_seasonality=True,
-                yearly_seasonality=True
-            )
-            model_full.fit(full_prophet)
-        else:
-            model_full = model
-        
-        # Generate future forecast
-        future = model_full.make_future_dataframe(periods=forecast_periods, freq='D')
-        forecast_df = model_full.predict(future)
-        
-        last_date = full_data.index[-1]
-        freq = full_data.index.freq or pd.infer_freq(full_data.index) or 'D'
-        
-        future_forecast = pd.Series(
+        # Extract forecast
+        forecast = pd.Series(
             forecast_df['yhat'].values[-forecast_periods:],
             index=pd.date_range(
-                start=last_date + pd.Timedelta(days=1),
+                start=train.index[-1] + pd.Timedelta(days=1),
                 periods=forecast_periods,
-                freq=freq
+                freq=train.index.freq or 'D'
             )
         )
         
-        return future_forecast, test_forecast_values, metrics, model_full
+        # Calculate metrics if test data available
+        if test is not None and len(test) > 0:
+            test_future = model.make_future_dataframe(periods=len(test), freq='D')
+            test_forecast_df = model.predict(test_future)
+            test_forecast = test_forecast_df['yhat'].values[-len(test):]
+            metrics = calculate_metrics(test[col_name].values, test_forecast)
+        else:
+            metrics = (None, None, None, None)
+        
+        return forecast, metrics, model
     
     except ImportError:
         st.error("Prophet not installed. Install with: pip install prophet")
-        return None, None, (None, None, None, None), None
+        return None, (None, None, None, None), None
     except Exception as e:
         st.error(f"Prophet failed: {str(e)}")
-        return None, None, (None, None, None, None), None
+        return None, (None, None, None, None), None
 
 
 def show_prophet():
@@ -670,45 +584,26 @@ def app():
         
         if st.button("🚀 Run Exponential Smoothing", type="primary", key="run_es"):
             with st.spinner("Fitting model and generating forecast..."):
-                future_forecast, test_forecast_values, metrics, model = forecast_exponential_smoothing(
-                    train, test, forecast_periods, col_name, df, method
+                forecast, metrics, model = forecast_exponential_smoothing(
+                    train, test, forecast_periods, col_name, method
                 )
                 
-                if future_forecast is not None:
+                if forecast is not None:
                     st.success("✅ Forecast completed!")
-                    plot_forecast(train, test, test_forecast_values, future_forecast, 
-                                f"{method} Exponential Smoothing", col_name)
+                    plot_forecast(train, test, forecast, f"{method} Exponential Smoothing", col_name)
                     show_metrics(metrics, test is not None and len(test) > 0)
                     
-                    # Create comprehensive download with actual + forecast
-                    download_data = []
-                    
-                    # Add historical data (train + test)
-                    for idx in df.index:
-                        download_data.append({
-                            'Date': idx,
-                            'Actual': df.loc[idx, col_name],
-                            'Forecast': np.nan,
-                            'Type': 'Historical'
-                        })
-                    
-                    # Add future forecast
-                    for idx in future_forecast.index:
-                        download_data.append({
-                            'Date': idx,
-                            'Actual': np.nan,
-                            'Forecast': future_forecast.loc[idx],
-                            'Type': 'Future Forecast'
-                        })
-                    
-                    download_df = pd.DataFrame(download_data)
-                    csv = download_df.to_csv(index=False).encode('utf-8')
+                    # Download forecast
+                    forecast_df = pd.DataFrame({
+                        'Date': forecast.index,
+                        'Forecast': forecast.values
+                    })
+                    csv = forecast_df.to_csv(index=False).encode('utf-8')
                     st.download_button(
-                        "📥 Download Complete Forecast",
+                        "📥 Download Forecast",
                         data=csv,
-                        file_name=f"forecast_es_{method.lower()}_complete.csv",
-                        mime="text/csv",
-                        help="Includes historical data and future forecasts"
+                        file_name=f"forecast_es_{method.lower()}.csv",
+                        mime="text/csv"
                     )
     
     # --- ARIMA ---
@@ -717,43 +612,29 @@ def app():
         
         if st.button("🚀 Run ARIMA", type="primary", key="run_arima"):
             with st.spinner("Fitting ARIMA model..."):
-                future_forecast, test_forecast_values, metrics, model = forecast_arima(
-                    train, test, forecast_periods, col_name, df, order
+                forecast, metrics, model = forecast_arima(
+                    train, test, forecast_periods, col_name, order
                 )
                 
-                if future_forecast is not None:
+                if forecast is not None:
                     st.success("✅ Forecast completed!")
-                    plot_forecast(train, test, test_forecast_values, future_forecast, 
-                                f"ARIMA{order}", col_name)
+                    plot_forecast(train, test, forecast, f"ARIMA{order}", col_name)
                     show_metrics(metrics, test is not None and len(test) > 0)
                     
                     # Model summary
                     with st.expander("📋 Model Summary"):
                         st.text(str(model.summary()))
                     
-                    # Create comprehensive download
-                    download_data = []
-                    for idx in df.index:
-                        download_data.append({
-                            'Date': idx,
-                            'Actual': df.loc[idx, col_name],
-                            'Forecast': np.nan,
-                            'Type': 'Historical'
-                        })
-                    for idx in future_forecast.index:
-                        download_data.append({
-                            'Date': idx,
-                            'Actual': np.nan,
-                            'Forecast': future_forecast.loc[idx],
-                            'Type': 'Future Forecast'
-                        })
-                    
-                    download_df = pd.DataFrame(download_data)
-                    csv = download_df.to_csv(index=False).encode('utf-8')
+                    # Download forecast
+                    forecast_df = pd.DataFrame({
+                        'Date': forecast.index,
+                        'Forecast': forecast.values
+                    })
+                    csv = forecast_df.to_csv(index=False).encode('utf-8')
                     st.download_button(
-                        "📥 Download Complete Forecast",
+                        "📥 Download Forecast",
                         data=csv,
-                        file_name=f"forecast_arima_{order[0]}_{order[1]}_{order[2]}_complete.csv",
+                        file_name=f"forecast_arima_{order[0]}_{order[1]}_{order[2]}.csv",
                         mime="text/csv"
                     )
     
@@ -763,10 +644,9 @@ def app():
         
         if st.button("🚀 Run SARIMA", type="primary", key="run_sarima"):
             with st.spinner("Fitting SARIMA model... This may take a minute."):
-                forecast, test_forecast_values, metrics, model = forecast_sarima(
-                    train, test, forecast_periods, col_name,df, order, seasonal_order
-                ) #def forecast_sarima(train, test, forecast_periods, col_name, full_data, order, seasonal_order):
-# future_forecast, test_forecast_values, metrics, model_full
+                forecast, metrics, model = forecast_sarima(
+                    train, test, forecast_periods, col_name, order, seasonal_order
+                )
                 
                 if forecast is not None:
                     st.success("✅ Forecast completed!")
@@ -797,7 +677,7 @@ def app():
         if st.button("🚀 Run Prophet", type="primary", key="run_prophet"):
             with st.spinner("Fitting Prophet model..."):
                 forecast, metrics, model = forecast_prophet(
-                    train, test, forecast_periods, col_name,df
+                    train, test, forecast_periods, col_name
                 )
                 
                 if forecast is not None:

@@ -763,10 +763,9 @@ def app():
         
         if st.button("🚀 Run SARIMA", type="primary", key="run_sarima"):
             with st.spinner("Fitting SARIMA model... This may take a minute."):
-                forecast, test_forecast_values, metrics, model = forecast_sarima(
-                    train, test, forecast_periods, col_name,df, order, seasonal_order
-                ) #def forecast_sarima(train, test, forecast_periods, col_name, full_data, order, seasonal_order):
-# future_forecast, test_forecast_values, metrics, model_full
+                forecast, metrics, model = forecast_sarima(
+                    train, test, forecast_periods, col_name, order, seasonal_order
+                )
                 
                 if forecast is not None:
                     st.success("✅ Forecast completed!")
@@ -797,7 +796,7 @@ def app():
         if st.button("🚀 Run Prophet", type="primary", key="run_prophet"):
             with st.spinner("Fitting Prophet model..."):
                 forecast, metrics, model = forecast_prophet(
-                    train, test, forecast_periods, col_name,df
+                    train, test, forecast_periods, col_name
                 )
                 
                 if forecast is not None:
