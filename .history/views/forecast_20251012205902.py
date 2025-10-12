@@ -184,72 +184,10 @@ def app():
                     st.download_button(
                         "📥 Download Complete Forecast",
                         data=csv,
-                        file_name=f"forecast_sarima_{order[0]}_{order[1]}_{order[2]}_complete.csv",
+                        file_name=f"forecast_sarima_{order[0]}_{order[1]}_{order[2]}x{seasonal_order[0]}_{seasonal_order[1]}_{seasonal_order[2]}_{seasonal_order[3]}_complete.csv",
                         mime="text/csv"
                     )
-
-    # --- TAB 3: SARIMA ---
-    with tab3:
-        order, seasonal_order = show_sarima()
-        
-        if st.button("🚀 Run SARIMA", type="primary", key="run_sarima"):
-            with st.spinner("Fitting SARIMA model... This may take a minute."):
-                future_forecast, test_forecast_values, metrics, model = forecast_sarima(
-                    train, test, forecast_periods, col_name, df, order, seasonal_order
-                )
-                
-                if future_forecast is not None:
-                    st.success("✅ Forecast completed!")
-                    
-                    # Plot forecast results
-                    plot_forecast(
-                        train, test, test_forecast_values, future_forecast,
-                        f"SARIMA{order}x{seasonal_order}", col_name
-                    )
-                    
-                    # Display metrics
-                    show_metrics(metrics, test is not None and len(test) > 0)
-                    
-                    # Model summary
-                    with st.expander("📋 Model Summary"):
-                        st.text(str(model.summary()))
-                    
-                    # --- Download full forecast ---
-                    download_data = []
-                    
-                    # Historical data
-                    for idx in df.index:
-                        download_data.append({
-                            'Date': idx,
-                            'Actual': df.loc[idx, col_name],
-                            'Forecast': np.nan,
-                            'Type': 'Historical'
-                        })
-                    
-                    # Future forecast data
-                    for idx in future_forecast.index:
-                        download_data.append({
-                            'Date': idx,
-                            'Actual': np.nan,
-                            'Forecast': future_forecast.loc[idx],
-                            'Type': 'Future Forecast'
-                        })
-                    
-                    # Combine and export
-                    download_df = pd.DataFrame(download_data)
-                    csv = download_df.to_csv(index=False).encode('utf-8')
-                    st.download_button(
-                        "📥 Download Complete Forecast",
-                        data=csv,
-                        file_name=(
-                            f"forecast_sarima_"
-                            f"{order[0]}_{order[1]}_{order[2]}_"
-                            f"{seasonal_order[0]}_{seasonal_order[1]}_"
-                            f"{seasonal_order[2]}_{seasonal_order[3]}_complete.csv"
-                        ),
-                        mime="text/csv"
-                    )
-
+    
     # --- TAB 4: Prophet ---
     with tab4:
         show_prophet()
@@ -292,3 +230,51 @@ def app():
                         mime="text/csv"
                     )
 
+
+    app()
+                    with st.expander("📋 Model Summary"):
+                        st.text(str(model.summary()))
+                    
+                    # Create comprehensive download
+                    download_data = []
+                    for idx in df.index:
+                        download_data.append({
+                            'Date': idx,
+                            'Actual': df.loc[idx, col_name],
+                            'Forecast': np.nan,
+                            'Type': 'Historical'
+                        })
+                    for idx in future_forecast.index:
+                        download_data.append({
+                            'Date': idx,
+                            'Actual': np.nan,
+                            'Forecast': future_forecast.loc[idx],
+                            'Type': 'Future Forecast'
+                        })
+                    
+                    download_df = pd.DataFrame(download_data)
+                    csv = download_df.to_csv(index=False).encode('utf-8')
+                    st.download_button(
+                        "📥 Download Complete Forecast",
+                        data=csv,
+                        file_name=f"forecast_arima_{order[0]}_{order[1]}_{order[2]}_complete.csv",
+                        mime="text/csv"
+                    )
+    
+    # --- TAB 3: SARIMA ---
+    with tab3:
+        order, seasonal_order = show_sarima()
+        
+        if st.button("🚀 Run SARIMA", type="primary", key="run_sarima"):
+            with st.spinner("Fitting SARIMA model... This may take a minute."):
+                future_forecast, test_forecast_values, metrics, model = forecast_sarima(
+                    train, test, forecast_periods, col_name, df, order, seasonal_order
+                )
+                
+                if future_forecast is not None:
+                    st.success("✅ Forecast completed!")
+                    plot_forecast(train, test, test_forecast_values, future_forecast,
+                                f"SARIMA{order}x{seasonal_order}", col_name)
+                    show_metrics(metrics, test is not None and len(test) > 0)
+                    
+                    # Model summary

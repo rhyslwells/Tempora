@@ -200,56 +200,14 @@ def app():
                 
                 if future_forecast is not None:
                     st.success("✅ Forecast completed!")
-                    
-                    # Plot forecast results
-                    plot_forecast(
-                        train, test, test_forecast_values, future_forecast,
-                        f"SARIMA{order}x{seasonal_order}", col_name
-                    )
-                    
-                    # Display metrics
+                    plot_forecast(train, test, test_forecast_values, future_forecast,
+                                f"SARIMA{order}x{seasonal_order}", col_name)
                     show_metrics(metrics, test is not None and len(test) > 0)
                     
                     # Model summary
                     with st.expander("📋 Model Summary"):
                         st.text(str(model.summary()))
-                    
-                    # --- Download full forecast ---
-                    download_data = []
-                    
-                    # Historical data
-                    for idx in df.index:
-                        download_data.append({
-                            'Date': idx,
-                            'Actual': df.loc[idx, col_name],
-                            'Forecast': np.nan,
-                            'Type': 'Historical'
-                        })
-                    
-                    # Future forecast data
-                    for idx in future_forecast.index:
-                        download_data.append({
-                            'Date': idx,
-                            'Actual': np.nan,
-                            'Forecast': future_forecast.loc[idx],
-                            'Type': 'Future Forecast'
-                        })
-                    
-                    # Combine and export
-                    download_df = pd.DataFrame(download_data)
-                    csv = download_df.to_csv(index=False).encode('utf-8')
-                    st.download_button(
-                        "📥 Download Complete Forecast",
-                        data=csv,
-                        file_name=(
-                            f"forecast_sarima_"
-                            f"{order[0]}_{order[1]}_{order[2]}_"
-                            f"{seasonal_order[0]}_{seasonal_order[1]}_"
-                            f"{seasonal_order[2]}_{seasonal_order[3]}_complete.csv"
-                        ),
-                        mime="text/csv"
-                    )
-
+    
     # --- TAB 4: Prophet ---
     with tab4:
         show_prophet()
