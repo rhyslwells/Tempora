@@ -525,6 +525,7 @@ def forecast_prophet(
             seasonality_mode=seasonality_mode,
             changepoint_prior_scale=changepoint_prior_scale,
             seasonality_prior_scale=seasonality_prior_scale,
+            holidays=country_holidays
         )
         model.fit(train_prophet)
 
@@ -548,6 +549,7 @@ def forecast_prophet(
             seasonality_mode=seasonality_mode,
             changepoint_prior_scale=changepoint_prior_scale,
             seasonality_prior_scale=seasonality_prior_scale,
+            holidays=country_holidays
         )
         model_full.fit(full_prophet)
 

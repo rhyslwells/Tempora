@@ -505,6 +505,7 @@ def forecast_prophet(
     seasonality_mode="additive",
     changepoint_prior_scale=0.05,
     seasonality_prior_scale=10.0,
+    include_holidays=False
 ):
     """Perform Prophet forecast with user-configurable parameters."""
     try:
@@ -516,6 +517,14 @@ def forecast_prophet(
         train_prophet = train.reset_index()
         train_prophet.columns = ['ds', 'y']
 
+        # Optional holidays
+        country_holidays = None
+        if include_holidays:
+            uk_holidays = holidays.UK()
+            country_holidays = pd.DataFrame({
+                'ds': list(uk_holidays.keys()),
+                'holiday': list(uk_holidays.values())
+            })
 
         # Instantiate model with user parameters
         model = Prophet(
@@ -525,6 +534,7 @@ def forecast_prophet(
             seasonality_mode=seasonality_mode,
             changepoint_prior_scale=changepoint_prior_scale,
             seasonality_prior_scale=seasonality_prior_scale,
+            holidays=country_holidays
         )
         model.fit(train_prophet)
 
@@ -548,6 +558,7 @@ def forecast_prophet(
             seasonality_mode=seasonality_mode,
             changepoint_prior_scale=changepoint_prior_scale,
             seasonality_prior_scale=seasonality_prior_scale,
+            holidays=country_holidays
         )
         model_full.fit(full_prophet)
 

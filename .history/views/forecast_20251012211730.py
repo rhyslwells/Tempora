@@ -279,6 +279,7 @@ def app():
                     help="Adjusts how strongly seasonality components are fitted."
                 )
 
+            include_holidays = st.checkbox("Include UK Holidays", value=False)
         
         # Display Prophet info
         show_prophet()
@@ -293,6 +294,7 @@ def app():
                     seasonality_mode=seasonality_mode,
                     changepoint_prior_scale=changepoint_prior_scale,
                     seasonality_prior_scale=seasonality_prior_scale,
+                    include_holidays=include_holidays
                 )
 
                 if future_forecast is not None:

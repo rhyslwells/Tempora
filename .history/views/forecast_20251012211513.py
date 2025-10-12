@@ -279,6 +279,7 @@ def app():
                     help="Adjusts how strongly seasonality components are fitted."
                 )
 
+            include_holidays = st.checkbox("Include UK Holidays", value=False)
         
         # Display Prophet info
         show_prophet()
@@ -293,6 +294,7 @@ def app():
                     seasonality_mode=seasonality_mode,
                     changepoint_prior_scale=changepoint_prior_scale,
                     seasonality_prior_scale=seasonality_prior_scale,
+                    include_holidays=include_holidays
                 )
 
                 if future_forecast is not None:
@@ -300,6 +302,8 @@ def app():
                     plot_forecast(train, test, test_forecast_values, future_forecast, "Prophet", col_name)
                     show_metrics(metrics, test is not None and len(test) > 0)
 
+                    with st.expander("📋 Model Components & Parameters"):
+                        st.text(str(model.params))
 
                     # --- Download Forecast Data ---
                     download_data = []
