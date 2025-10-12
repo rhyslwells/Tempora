@@ -40,6 +40,23 @@ def plot_time_series(df, col, date_col="Date"):
     st.plotly_chart(fig, use_container_width=True)
 
 
+def make_decomposition_plot(df, result, target_col):
+    """Create decomposition Plotly figure using robust index handling."""
+    plot_df = df.reset_index()
+    date_column_name = plot_df.columns[0]
+    plot_df[date_column_name] = pd.to_datetime(plot_df[date_column_name], errors='coerce')
+
+    fig = make_subplots(rows=4, cols=1, shared_xaxes=True,
+                        subplot_titles=[f"Observed ({target_col})", "Trend", "Seasonal", "Residual"])
+    fig.add_trace(go.Scatter(x=plot_df[date_column_name], y=result.observed, name="Observed"), row=1, col=1)
+    fig.add_trace(go.Scatter(x=plot_df[date_column_name], y=result.trend, name="Trend"), row=2, col=1)
+    fig.add_trace(go.Scatter(x=plot_df[date_column_name], y=result.seasonal, name="Seasonal"), row=3, col=1)
+    fig.add_trace(go.Scatter(x=plot_df[date_column_name], y=result.resid, name="Residual"), row=4, col=1)
+
+    fig.update_layout(height=900, title_text=f"Seasonal Decomposition of {target_col}",
+                      xaxis=dict(type='date'))
+    st.plotly_chart(fig, use_container_width=True)
+
 
 # -----------------------
 # Main Functions
@@ -131,39 +148,6 @@ def show_moving_average(df: pd.DataFrame):
     st.plotly_chart(fig, use_container_width=True)
 
 
-# Fixed plotting functions for explore.py
-
-def make_decomposition_plot(df, result, target_col, date_col="Date"):
-    """Create decomposition Plotly figure with consistent date handling."""
-    # The df passed in is already cleaned, just extract the dates
-    dates = df[date_col].tolist()
-    
-    # Convert result components to lists
-    observed = result.observed.tolist()
-    trend = result.trend.tolist()
-    seasonal = result.seasonal.tolist()
-    residual = result.resid.tolist()
-    
-    fig = make_subplots(
-        rows=4, cols=1, 
-        shared_xaxes=True,
-        subplot_titles=[f"Observed ({target_col})", "Trend", "Seasonal", "Residual"]
-    )
-    
-    fig.add_trace(go.Scatter(x=dates, y=observed, mode='lines', name="Observed"), row=1, col=1)
-    fig.add_trace(go.Scatter(x=dates, y=trend, mode='lines', name="Trend"), row=2, col=1)
-    fig.add_trace(go.Scatter(x=dates, y=seasonal, mode='lines', name="Seasonal"), row=3, col=1)
-    fig.add_trace(go.Scatter(x=dates, y=residual, mode='lines', name="Residual"), row=4, col=1)
-    
-    fig.update_layout(
-        height=900, 
-        title_text=f"Seasonal Decomposition of {target_col}",
-        xaxis4_title="Date",  # Only label bottom x-axis
-        xaxis=dict(type='date')
-    )
-    st.plotly_chart(fig, use_container_width=True)
-
-
 def show_decomposition(df: pd.DataFrame):
     """Time series decomposition with consistent date handling."""
     st.subheader("🧩 Time Series Decomposition")
@@ -190,7 +174,7 @@ def show_decomposition(df: pd.DataFrame):
             period=period
         )
         # Pass the cleaned dataframe to the plotting function
-        make_decomposition_plot(df_copy, result, target_col)
+        make_decomposition_plot(df_copy, result, target_col, date_col="Date")
     except Exception as e:
         st.error(f"Decomposition failed: {e}")
         st.info("Try adjusting the seasonal period or check if you have enough data points.")
@@ -220,16 +204,12 @@ def app():
     tab1, tab2, tab3 = st.tabs(["Plot", "Statistics", "Decomposition"])
 
     with tab1:
-        # We do not need the time series preview, as we havete moving average plot
-        # Maybe we allow for multiple different moving averages to be shown.
         df_copy_1 = df_copy.copy()
         show_time_series_view(df_copy_1)
         df_copy_2 = df_copy.copy()
         show_moving_average(df_copy_2)
 
     with tab2:
-        # we do not need dataset overview or missing values or data preview
-        # are there an othere statistical things we can explore regarding time series data?
         show_overview(df_copy)
         show_summary_statistics(df_copy)
 

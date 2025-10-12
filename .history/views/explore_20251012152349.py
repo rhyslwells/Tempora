@@ -39,8 +39,34 @@ def plot_time_series(df, col, date_col="Date"):
     )
     st.plotly_chart(fig, use_container_width=True)
 
-
-
+def make_decomposition_plot(df, result, target_col, date_col="Date"):
+    """Create decomposition Plotly figure with consistent date handling."""
+    # Use the same pattern as plot_time_series
+    df_copy = df.copy()
+    df_copy[date_col] = pd.to_datetime(df_copy[date_col], errors='coerce')
+    df_copy = df_copy.dropna(subset=[date_col])
+    df_copy = df_copy.sort_values(by=date_col)
+    
+    dates = df_copy[date_col].tolist()
+    
+    fig = make_subplots(
+        rows=4, cols=1, 
+        shared_xaxes=True,
+        subplot_titles=[f"Observed ({target_col})", "Trend", "Seasonal", "Residual"]
+    )
+    
+    fig.add_trace(go.Scatter(x=dates, y=result.observed, name="Observed"), row=1, col=1)
+    fig.add_trace(go.Scatter(x=dates, y=result.trend, name="Trend"), row=2, col=1)
+    fig.add_trace(go.Scatter(x=dates, y=result.seasonal, name="Seasonal"), row=3, col=1)
+    fig.add_trace(go.Scatter(x=dates, y=result.resid, name="Residual"), row=4, col=1)
+    
+    fig.update_layout(
+        height=900, 
+        title_text=f"Seasonal Decomposition of {target_col}",
+        xaxis4_title="Date",  # Only label bottom x-axis
+        xaxis=dict(type='date')
+    )
+    st.plotly_chart(fig, use_container_width=True)
 # -----------------------
 # Main Functions
 # -----------------------
@@ -130,40 +156,6 @@ def show_moving_average(df: pd.DataFrame):
     )
     st.plotly_chart(fig, use_container_width=True)
 
-
-# Fixed plotting functions for explore.py
-
-def make_decomposition_plot(df, result, target_col, date_col="Date"):
-    """Create decomposition Plotly figure with consistent date handling."""
-    # The df passed in is already cleaned, just extract the dates
-    dates = df[date_col].tolist()
-    
-    # Convert result components to lists
-    observed = result.observed.tolist()
-    trend = result.trend.tolist()
-    seasonal = result.seasonal.tolist()
-    residual = result.resid.tolist()
-    
-    fig = make_subplots(
-        rows=4, cols=1, 
-        shared_xaxes=True,
-        subplot_titles=[f"Observed ({target_col})", "Trend", "Seasonal", "Residual"]
-    )
-    
-    fig.add_trace(go.Scatter(x=dates, y=observed, mode='lines', name="Observed"), row=1, col=1)
-    fig.add_trace(go.Scatter(x=dates, y=trend, mode='lines', name="Trend"), row=2, col=1)
-    fig.add_trace(go.Scatter(x=dates, y=seasonal, mode='lines', name="Seasonal"), row=3, col=1)
-    fig.add_trace(go.Scatter(x=dates, y=residual, mode='lines', name="Residual"), row=4, col=1)
-    
-    fig.update_layout(
-        height=900, 
-        title_text=f"Seasonal Decomposition of {target_col}",
-        xaxis4_title="Date",  # Only label bottom x-axis
-        xaxis=dict(type='date')
-    )
-    st.plotly_chart(fig, use_container_width=True)
-
-
 def show_decomposition(df: pd.DataFrame):
     """Time series decomposition with consistent date handling."""
     st.subheader("🧩 Time Series Decomposition")
@@ -194,7 +186,6 @@ def show_decomposition(df: pd.DataFrame):
     except Exception as e:
         st.error(f"Decomposition failed: {e}")
         st.info("Try adjusting the seasonal period or check if you have enough data points.")
-
 # -----------------------
 # Main App Function
 # -----------------------
