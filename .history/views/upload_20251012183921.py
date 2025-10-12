@@ -1,5 +1,3 @@
-# lets remove the quick actions section, 
-
 import streamlit as st
 import pandas as pd
 import io
@@ -160,3 +158,23 @@ def show_data_summary(df: pd.DataFrame, filename: str):
     
     st.dataframe(df.head(preview_rows), use_container_width=True)
     
+    # --- Quick Actions ---
+    st.divider()
+    st.subheader("⚡ Quick Actions")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("🔄 Proceed to Data Preparation", type="primary", use_container_width=True):
+            st.info("👉 Navigate to the 'Data Preparation' page in the sidebar to continue")
+    
+    with col2:
+        # Download cleaned data info as CSV
+        if st.button("📥 Download Column Info", use_container_width=True):
+            csv = col_df.to_csv(index=False)
+            st.download_button(
+                label="Download CSV",
+                data=csv,
+                file_name=f"{filename}_column_info.csv",
+                mime="text/csv"
+            )
