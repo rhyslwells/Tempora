@@ -111,6 +111,7 @@ def app():
         #### **8. Version Roadmap**
 
         * **v1.1** → Residual analysis in explore, rolling mean in explore, seasonal differencing in transform.
+        * **v1.2** → Enhancements and bug fixes
         * **v1.3** → Prophet parameter tuning and enhancements
         * **v1.4** → Auto-Forecast module (model comparison and selection)
         """

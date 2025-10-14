@@ -85,11 +85,11 @@ def app():
         * [ ] Add **automated grid search** for ARIMA and SARIMA parameter combinations $(p, d, q)$ and $(P, D, Q, m)$.
         * [ ] **Skip non-stationary models** automatically using the Augmented Dickey–Fuller (ADF) test.
         * [ ] Evaluate all valid models using **performance metrics**:
-              * Mean Absolute Error (MAE)
-              * Root Mean Squared Error (RMSE)
-              * Mean Absolute Percentage Error (MAPE)
-              * Akaike Information Criterion (AIC)
-              * Bayesian Information Criterion (BIC)
+          * Mean Absolute Error (MAE)
+          * Root Mean Squared Error (RMSE)
+          * Mean Absolute Percentage Error (MAPE)
+          * Akaike Information Criterion (AIC)
+          * Bayesian Information Criterion (BIC)
         * [ ] Allow **user selection of preferred metric** for model ranking and comparison.
         * [ ] **Automatically select and fit** the best-performing model based on the chosen metric.
         * [ ] Add **forecast visualization** displaying predicted values with confidence intervals.
@@ -106,13 +106,41 @@ def app():
                 * Data transformations.
                 * Model configuration.
                 * Forecast accuracy and diagnostics.
+
         ---
 
         #### **8. Version Roadmap**
 
-        * **v1.1** → Residual analysis in explore, rolling mean in explore, seasonal differencing in transform.
+        * **v1.1** → Custom dataset upload, Plotly visualizations
+        * **v1.2** → ARIMA/SARIMA grid search and residual diagnostics
         * **v1.3** → Prophet parameter tuning and enhancements
         * **v1.4** → Auto-Forecast module (model comparison and selection)
         """
     )
 
+# These are future featres i will implement later. Help me rewrite these soi can later implement them
+
+# Need to note in forecast.py that note that (S)ARMA models need stationarity
+
+# in explore.py add a rolling mean plot in explore # - We can also look at the rolling mean and std.
+
+# In transform.py couuld remove seasonal differencing
+
+# In explore.py do residual analysis
+# - The residuals should approximate a Gaussian distribution (aka white noise).
+# - Visual inspection:
+#     - ACF plot.: auto cor in residuals: expect no correlations 
+#     - Histogram.
+#     - QQ plot. =# # - White noise should ideally follow a normal distribution.
+# - Statistical tests:
+#     - Normality.
+# - &#x2705; Histogram/Density plot.
+# - 🤔 QQ-plot
+# - &#x274C; Jarque-Bera (reliable for large sample size).
+# - &#x274C; Shapiro-Wilk (reliable for large sample size).
+#     - Autocorrelation.
+#     - Heteroskedasticity.
+
+# grid search for ARIMA and SARIMA with the ability to select
+# Filter out non-stationary candidates
+# evalauation metrics AIC, BIC, MAPE, RMSE

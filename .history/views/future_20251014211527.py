@@ -82,18 +82,27 @@ def app():
 
         #### **6. Auto-Forecast Module**
 
-        * [ ] Add **automated grid search** for ARIMA and SARIMA parameter combinations $(p, d, q)$ and $(P, D, Q, m)$.
-        * [ ] **Skip non-stationary models** automatically using the Augmented Dickey–Fuller (ADF) test.
-        * [ ] Evaluate all valid models using **performance metrics**:
-              * Mean Absolute Error (MAE)
-              * Root Mean Squared Error (RMSE)
-              * Mean Absolute Percentage Error (MAPE)
-              * Akaike Information Criterion (AIC)
-              * Bayesian Information Criterion (BIC)
-        * [ ] Allow **user selection of preferred metric** for model ranking and comparison.
-        * [ ] **Automatically select and fit** the best-performing model based on the chosen metric.
-        * [ ] Add **forecast visualization** displaying predicted values with confidence intervals.
+        A fully automated forecasting system that tests, compares, and selects the best model.
 
+        * [ ] Develop an **automated model selection engine**:
+
+        * Compare ARIMA, SARIMA, Prophet, ETS, and naïve baseline models.
+        * Rank models based on AIC/BIC and validation metrics (MAPE, RMSE).
+        * [ ] Include **automatic stationarity detection and transformation**:
+
+        * Differencing, log-scaling, Box–Cox transformations if required.
+        * [ ] Automate **train/test splitting** (e.g., last 20% of data for validation).
+        * [ ] Add a **model comparison dashboard**:
+
+        * Display ranked results with metrics and residual diagnostics.
+        * Plot top models’ forecasts together for comparison.
+        * [ ] Add **hyperparameter optimization** (grid or random search).
+        * [ ] Generate **summary reports** with:
+
+        * Best model type and configuration.
+        * Key metrics and plots.
+        * Suggested model rationale.
+        * [ ] (Optional) Implement **meta-learning hints** — recommend model families based on time series characteristics (e.g., strong seasonality → Prophet).
 
         ---
 
@@ -101,18 +110,49 @@ def app():
 
         * [ ] Add **inline explanations** for each model type and parameter.
         * [ ] Include **“Learn More” expandable sections** beside model results.
+        * [ ] Provide **sample datasets and workflow demos**.
         * [ ] Add **progress indicators** (spinners or progress bars) for model fitting and grid search.
+        * [ ] Include **performance indicators** (icons or color-coded metrics).
         * [ ] Enable **report generation** in PDF/Markdown summarizing:
-                * Data transformations.
-                * Model configuration.
-                * Forecast accuracy and diagnostics.
+
+        * Data transformations.
+        * Model configuration.
+        * Forecast accuracy and diagnostics.
+
         ---
 
         #### **8. Version Roadmap**
 
-        * **v1.1** → Residual analysis in explore, rolling mean in explore, seasonal differencing in transform.
+        * **v1.1** → Custom dataset upload, Plotly visualizations
+        * **v1.2** → ARIMA/SARIMA grid search and residual diagnostics
         * **v1.3** → Prophet parameter tuning and enhancements
         * **v1.4** → Auto-Forecast module (model comparison and selection)
         """
     )
 
+# These are future featres i will implement later. Help me rewrite these soi can later implement them
+
+# Need to note in forecast.py that note that (S)ARMA models need stationarity
+
+# in explore.py add a rolling mean plot in explore # - We can also look at the rolling mean and std.
+
+# In transform.py couuld remove seasonal differencing
+
+# In explore.py do residual analysis
+# - The residuals should approximate a Gaussian distribution (aka white noise).
+# - Visual inspection:
+#     - ACF plot.: auto cor in residuals: expect no correlations 
+#     - Histogram.
+#     - QQ plot. =# # - White noise should ideally follow a normal distribution.
+# - Statistical tests:
+#     - Normality.
+# - &#x2705; Histogram/Density plot.
+# - 🤔 QQ-plot
+# - &#x274C; Jarque-Bera (reliable for large sample size).
+# - &#x274C; Shapiro-Wilk (reliable for large sample size).
+#     - Autocorrelation.
+#     - Heteroskedasticity.
+
+# grid search for ARIMA and SARIMA with the ability to select
+# Filter out non-stationary candidates
+# evalauation metrics AIC, BIC, MAPE, RMSE
