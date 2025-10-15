@@ -320,10 +320,10 @@ def show_decomposition(df: pd.DataFrame):
     """Time series decomposition with consistent date handling."""
     st.subheader("🧩 Time Series Decomposition")
 
-    with st.expander("💡 Terms"):
+        with st.expander("💡 Terms"):
         st.write("""
         - [Seasonality in Time Series](https://rhyslwells.github.io/Data-Archive/categories/data-science/Seasonality-in-Time-Series): Repeating patterns in time series data
-        - [Additive vs Multiplicative Models Time Series](https://rhyslwells.github.io/Data-Archive/categories/data-science/Additive-vs-Multiplicative-Models-Time-Series): Two simple categories of time series models""")
+        """)
     
     target_col = st.session_state.get("selected_col", None)
     if target_col is None:

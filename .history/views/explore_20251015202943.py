@@ -173,7 +173,7 @@ def show_time_series_statistics(df: pd.DataFrame):
     st.markdown("### 🔍 Stationarity Tests")
     st.write("Tests whether the time series has constant mean and variance over time.")
 
-    with st.expander("💡 Terms"):
+        with st.expander("💡 Terms"):
         st.write("""
         - [ADF Test](https://rhyslwells.github.io/Data-Archive/categories/data-science/ADF-Test): A test for stationarity
         - [KPSS](https://rhyslwells.github.io/Data-Archive/categories/data-science/KPSS-Test): A test for non-stationarity""")
@@ -319,11 +319,6 @@ def show_autocorrelation_analysis(df: pd.DataFrame):
 def show_decomposition(df: pd.DataFrame):
     """Time series decomposition with consistent date handling."""
     st.subheader("🧩 Time Series Decomposition")
-
-    with st.expander("💡 Terms"):
-        st.write("""
-        - [Seasonality in Time Series](https://rhyslwells.github.io/Data-Archive/categories/data-science/Seasonality-in-Time-Series): Repeating patterns in time series data
-        - [Additive vs Multiplicative Models Time Series](https://rhyslwells.github.io/Data-Archive/categories/data-science/Additive-vs-Multiplicative-Models-Time-Series): Two simple categories of time series models""")
     
     target_col = st.session_state.get("selected_col", None)
     if target_col is None:

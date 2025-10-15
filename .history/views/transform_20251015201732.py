@@ -348,7 +348,7 @@ def app():
                                       list(detrend_options.keys()),
                                       format_func=lambda x: detrend_options[x])
         
-        with st.expander("💡 When to use detrending"):
+        with st.expander("💡 When to use detrending \n \n nn"):
             st.write("""
             **First Difference**: Most common, removes linear trends
             - Good for: Stock prices, GDP, sales data

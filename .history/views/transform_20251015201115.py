@@ -384,8 +384,7 @@ def app():
 
     with st.expander("💡 Terms"):
         st.write("""
-        - [ADF Test](https://rhyslwells.github.io/Data-Archive/categories/data-science/ADF-Test): Test for stationarity in time series data.
-        - [Stationary Time Series](https://rhyslwells.github.io/Data-Archive/categories/data-science/Stationary-Time-Series): Time series data that is stationary has a constant mean and variance over time
+        - [ADF Test](https://rhyslwells.github.io/Data-Archive/categories/data-science/ADF-Test)): Test for stationarity in time series data.
         """)
     
     # ADF tests

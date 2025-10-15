@@ -344,7 +344,7 @@ def app():
             "Second Difference": "Remove stronger trends (diff of diff)",
             "Linear Detrend": "Remove linear trend component"
         }
-        detrend_method = st.selectbox("Detrending method:", 
+        detrend_method = st.selectbox("Detrending method:\n", 
                                       list(detrend_options.keys()),
                                       format_func=lambda x: detrend_options[x])
         

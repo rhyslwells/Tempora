@@ -237,7 +237,7 @@ def app():
             st.write("""
             - [Resampling](https://rhyslwells.github.io/Data-Archive/categories/statistics/Resampling): Aggregates data to a specific frequency
             - [Interpolation](https://rhyslwells.github.io/Data-Archive/categories/data-science/Interpolation): Fills in missing data points
-            - [Handling Missing Data](https://rhyslwells.github.io/Data-Archive/categories/data-science/Handling-Missing-Data): Techniques for dealing with missing data
+            - [Handling Missing Data](https://rhyslwells.github.io/Data-Archive/categories/data-science/Missing-Data): Techniques for dealing with missing data
                      """)
     
     col1, col2 = st.columns(2)
@@ -306,9 +306,7 @@ def app():
     with st.expander("💡 Terms"):
         st.write("""
         - [Differencing in Time Series](https://rhyslwells.github.io/Data-Archive/categories/data-science/Differencing-in-Time-Series): Removes trend and seasonality from data
-        - [Trends in Time Series](https://rhyslwells.github.io/Data-Archive/categories/data-science/Trends-in-Time-Series): Identify patterns in data
-        - [Log Transform](https://rhyslwells.github.io/Data-Archive/categories/data-analysis/Log-transformation): Increase interpretability of data
-                 """)
+        -""")
     
     col1, col2 = st.columns(2)
     
@@ -381,12 +379,6 @@ def app():
     # STEP 4: Results & Validation
     # ========================================
     st.header("4️⃣ Transformation Results")
-
-    with st.expander("💡 Terms"):
-        st.write("""
-        - [ADF Test](https://rhyslwells.github.io/Data-Archive/categories/data-science/ADF-Test): Test for stationarity in time series data.
-        - [Stationary Time Series](https://rhyslwells.github.io/Data-Archive/categories/data-science/Stationary-Time-Series): Time series data that is stationary has a constant mean and variance over time
-        """)
     
     # ADF tests
     before_stat, before_pval, before_status = adf_test(df[selected_col])
