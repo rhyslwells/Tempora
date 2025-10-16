@@ -332,7 +332,7 @@ def show_arima():
     st.subheader("📊 ARIMA (AutoRegressive Integrated Moving Average)")
     
     st.write("""
-    [ARIMA](https://rhyslwells.github.io/Data-Archive/categories/data-science/ARIMA) models capture autocorrelations in the data and are highly flexible.
+    ARIMA models capture autocorrelations in the data and are highly flexible.
     Suitable for stationary time series (use differencing if needed).
     """)
     
@@ -445,7 +445,7 @@ def show_sarima():
     st.subheader("🔄 SARIMA (Seasonal ARIMA)")
     
     st.write("""
-    [SARIMA](https://rhyslwells.github.io/Data-Archive/categories/machine-learning/SARIMA) extends ARIMA to explicitly model seasonal patterns.
+    SARIMA extends ARIMA to explicitly model seasonal patterns.
     Best for data with strong, recurring seasonal components.
     """)
     
@@ -576,10 +576,10 @@ def forecast_prophet(
 def show_prophet():
 
     """Prophet forecasting interface."""
-    # st.subheader("🔮 Prophet (Facebook)")
+    st.subheader("🔮 Prophet (Facebook)")
     
     st.write("""
-    [Prophet](https://rhyslwells.github.io/Data-Archive/categories/machine-learning/Prophet) is designed for business forecasting with strong seasonal patterns and holidays.
+    Prophet is designed for business forecasting with strong seasonal patterns and holidays.
     Handles missing data and outliers automatically, requires minimal parameter tuning.
     """)
     

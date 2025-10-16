@@ -576,7 +576,7 @@ def forecast_prophet(
 def show_prophet():
 
     """Prophet forecasting interface."""
-    # st.subheader("🔮 Prophet (Facebook)")
+    st.subheader("🔮 Prophet (Facebook)")
     
     st.write("""
     [Prophet](https://rhyslwells.github.io/Data-Archive/categories/machine-learning/Prophet) is designed for business forecasting with strong seasonal patterns and holidays.
