@@ -14,12 +14,16 @@ def app():
     # ---------------- MAIN CONTENT ---------------- #
     st.markdown(
         """
+        ### **Welcome Page**
+        - [ ] Add a **Quick Start Guide** for first-time users with a sample workflow and demo dataset.
+        - [ ] Display **data freshness information** (e.g., last updated timestamp from source file or upload metadata).
 
+        ---
 
         ### **Explore Module**
         Planned improvements to exploratory analysis functionality.
 
-        - Add **residual analysis**, and **seasonal differencing** features.
+        - Add **residual analysis**, **rolling mean**, and **seasonal differencing** features.
         - [ ] Include histogram and kernel density plots.
         - [ ] Add **normality tests** (Jarque–Bera, Shapiro–Wilk).
         - [ ] Implement **residual analysis suite**:
@@ -39,8 +43,6 @@ def app():
         - [ ] Add an **“Undo Transform”** button after forecasting to invert applied transformations before download.
 
         #### **Auto-Forecast Module**
-        Planned improvements to auto-forecast functionality within the forecast module.
-
         - [ ] Add **automated grid search** for ARIMA and SARIMA parameter combinations:
               $(p, d, q)$ and $(P, D, Q, m)$ with user-adjustable sliders.
         - [ ] Automatically **skip non-stationary models** using the Augmented Dickey–Fuller (ADF) test.
@@ -55,5 +57,6 @@ def app():
         - [ ] Add **forecast visualizations** showing predicted values with confidence intervals.
         - [ ] Add **progress indicators** (spinners or progress bars) for model fitting and grid search.
 
+        ---
         """
     )

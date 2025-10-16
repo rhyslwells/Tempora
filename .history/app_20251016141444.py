@@ -55,6 +55,19 @@ if page == "Welcome":
     For source code and examples, see the [time-series-analysis repository](https://github.com/rhyslwells/TimeSeries-App).
     """)
 
+def get_last_commit_date():
+    try:
+        result = subprocess.check_output(
+            ["git", "log", "-1", "--format=%cd", "--date=iso"], stderr=subprocess.DEVNULL
+        )
+        return result.decode("utf-8").strip()
+    except Exception:
+        return "Unknown (Git not available)"
+
+last_commit_date = get_last_commit_date()
+st.caption(f"**App last updated:** {last_commit_date}")
+
+
 elif page == "Upload":
     from views import upload
     upload.app()
@@ -74,15 +87,3 @@ elif page == "Forecast":
 elif page == "Future":
     from views import future
     future.app()
-
-def get_last_commit_date():
-    try:
-        result = subprocess.check_output(
-            ["git", "log", "-1", "--format=%cd", "--date=iso"], stderr=subprocess.DEVNULL
-        )
-        return result.decode("utf-8").strip()
-    except Exception:
-        return "Unknown (Git not available)"
-
-last_commit_date = get_last_commit_date()
-st.caption(f"**App last updated:** {last_commit_date}")
