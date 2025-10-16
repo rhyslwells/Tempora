@@ -56,13 +56,13 @@ if page == "Welcome":
     """)
 
     def get_last_commit_date():
-        try:
-            result = subprocess.check_output(
-                ["git", "log", "-1", "--format=%cd", "--date=iso"], stderr=subprocess.DEVNULL
-            )
-            return result.decode("utf-8").strip()
-        except Exception:
-            return "Unknown (Git not available)"
+    try:
+        result = subprocess.check_output(
+            ["git", "log", "-1", "--format=%cd", "--date=iso"], stderr=subprocess.DEVNULL
+        )
+        return result.decode("utf-8").strip()
+    except Exception:
+        return "Unknown (Git not available)"
 
     last_commit_date = get_last_commit_date()
     st.caption(f"**App last updated:** {last_commit_date}")

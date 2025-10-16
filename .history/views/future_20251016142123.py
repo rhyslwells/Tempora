@@ -15,6 +15,7 @@ def app():
     st.markdown(
         """
 
+
         ### **Explore Module**
         Planned improvements to exploratory analysis functionality.
 
