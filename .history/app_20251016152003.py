@@ -25,12 +25,12 @@ page = st.sidebar.radio(
 # Page routing logic
 # -------------------------------
 if page == "Welcome":
-    st.title("Welcome to Tempora! 📈")
+    st.title("Welcome to Tempora a Time Series Analysis App")
 
     st.markdown("""
     ### Overview
 
-    This time series analysis application provides an interactive environment for **transforming, exploring, and forecasting time series data**.
+    This application provides an interactive environment for **transforming, exploring, and forecasting time series data**.
 
     To learn more about the underlying methods, visit the [Data Archive](https://rhyslwells.github.io/Data-Archive) for articles related to time series.
                 
